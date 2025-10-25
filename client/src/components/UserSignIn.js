@@ -1,8 +1,12 @@
 import { useContext, useRef, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
+
+// Context
 import ThemeContext from '../context/ThemeContext'
+import UserContext from '../context/UserContext'
 
 const UserSignIn = () => {
+  const { actions } = useContext(UserContext)
   const { accentColor } = useContext(ThemeContext)
   const navigate = useNavigate()
 
@@ -21,31 +25,12 @@ const UserSignIn = () => {
       password: password.current.value
     }
 
-    const encodedCredentials = btoa(
-      // Needs colon between username and password
-      `${credentials.username}:${credentials.password}`
-    )
-
-    const fetchOptions = {
-      method: 'GET',
-      headers: {
-        Authorization: `Basic ${encodedCredentials}`
-      }
-    }
-
     try {
-      const response = await fetch(
-        'http://localhost:3000/api/users',
-        fetchOptions
-      )
-      if (response.status === 200) {
-        const user = await response.json()
-        console.log(`SUCCESS! ${user.username} is now signed in!`)
+      const user = await actions.signIn(credentials)
+      if (user) {
         navigate('/authenticated')
-      } else if (response.status === 401) {
-        setErrors(['Sign in was unsuccessful'])
       } else {
-        throw new Error()
+        setErrors(['Sign-in was unsuccessful'])
       }
     } catch (error) {
       console.log(error)
