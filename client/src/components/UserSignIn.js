@@ -1,24 +1,61 @@
-import { useContext, useRef, useState } from 'react';
-import { Link } from 'react-router-dom';
-import ThemeContext from '../context/ThemeContext';
+import { useContext, useRef, useState } from 'react'
+import { Link, useNavigate } from 'react-router-dom'
+import ThemeContext from '../context/ThemeContext'
 
 const UserSignIn = () => {
-  const { accentColor } = useContext(ThemeContext);
+  const { accentColor } = useContext(ThemeContext)
+  const navigate = useNavigate()
 
   // State
-  const username = useRef(null);
-  const password = useRef(null);
-  const [errors, setErrors] = useState([]);
+  const username = useRef(null)
+  const password = useRef(null)
+  const [errors, setErrors] = useState([])
 
   // Event Handlers
-  const handleSubmit = (event) => {
-    event.preventDefault();
+  const handleSubmit = async (event) => {
+    event.preventDefault()
 
+    // Store Credentials
+    const credentials = {
+      username: username.current.value,
+      password: password.current.value
+    }
+
+    const encodedCredentials = btoa(
+      // Needs colon between username and password
+      `${credentials.username}:${credentials.password}`
+    )
+
+    const fetchOptions = {
+      method: 'GET',
+      headers: {
+        Authorization: `Basic ${encodedCredentials}`
+      }
+    }
+
+    try {
+      const response = await fetch(
+        'http://localhost:3000/api/users',
+        fetchOptions
+      )
+      if (response.status === 200) {
+        const user = await response.json()
+        console.log(`SUCCESS! ${user.username} is now signed in!`)
+        navigate('/authenticated')
+      } else if (response.status === 401) {
+        setErrors(['Sign in was unsuccessful'])
+      } else {
+        throw new Error()
+      }
+    } catch (error) {
+      console.log(error)
+      navigate('/error')
+    }
   }
 
   const handleCancel = (event) => {
-    event.preventDefault();
-
+    event.preventDefault()
+    navigate('/')
   }
 
   return (
@@ -31,36 +68,56 @@ const UserSignIn = () => {
               <h2 className="validation--errors--label">Validation errors</h2>
               <div className="validation-errors">
                 <ul>
-                  {errors.map((error, i) => <li key={i}>{error}</li>)}
+                  {errors.map((error, i) => (
+                    <li key={i}>{error}</li>
+                  ))}
                 </ul>
               </div>
             </div>
-          ) : null }
+          ) : null}
           <form onSubmit={handleSubmit}>
             <input
               id="username"
               name="username"
               type="text"
               ref={username}
-              placeholder="User Name" />
+              placeholder="User Name"
+            />
             <input
               id="password"
               name="password"
               type="password"
               ref={password}
-              placeholder="Password" />
+              placeholder="Password"
+            />
             <div className="pad-bottom">
-              <button className="button" type="submit" style={{ background: accentColor }}>Sign in</button>
-              <button className="button button-secondary" style={{ color: accentColor }} onClick={handleCancel}>Cancel</button>
+              <button
+                className="button"
+                type="submit"
+                style={{ background: accentColor }}
+              >
+                Sign in
+              </button>
+              <button
+                className="button button-secondary"
+                style={{ color: accentColor }}
+                onClick={handleCancel}
+              >
+                Cancel
+              </button>
             </div>
           </form>
         </div>
         <p>
-          Don't have a user account? <Link style={{ color: accentColor }} to="/signup">Click here</Link> to sign up!
+          Don't have a user account?{' '}
+          <Link style={{ color: accentColor }} to="/signup">
+            Click here
+          </Link>{' '}
+          to sign up!
         </p>
       </div>
     </div>
-  );
+  )
 }
 
-export default UserSignIn;
+export default UserSignIn
