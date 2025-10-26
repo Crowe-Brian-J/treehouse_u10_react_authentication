@@ -33,14 +33,17 @@ export const UserProvider = (props) => {
     }
   }
 
-  const signOut = () => {}
+  const signOut = () => {
+    setAuthUser(null)
+  }
 
   return (
     <UserContext.Provider
       value={{
         authUser,
         actions: {
-          signIn
+          signIn,
+          signOut
         }
       }}
     >
